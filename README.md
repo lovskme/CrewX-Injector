@@ -9,8 +9,8 @@ Windows x64 · Minecraft 1.8.9 · OneClient
 ## Instalação
 
 1. Baixe o `CrewXInjector.exe` pelo link acima.
-2. Feche completamente o OneClient e abra novamente.
-3. Entre em um mundo e execute o injector.
+2. Abra o OneClient, inicie a versão **1.8.9** e entre em um mundo ou servidor de Minecraft.
+3. Execute o `CrewXInjector.exe`.
 4. Volte ao jogo e pressione **Insert**.
 
 Uma configuração antiga pode conservar outra tecla. O launcher e o jogo são instalados separadamente.
