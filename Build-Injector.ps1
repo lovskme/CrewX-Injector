@@ -1,6 +1,7 @@
 param(
     [string]$Jdk17 = $env:JAVA_HOME,
-    [string]$Jdk8
+    [string]$Jdk8,
+    [string]$OneClientGame
 )
 
 $ErrorActionPreference = 'Stop'
@@ -106,8 +107,12 @@ $taskOrnitheMapping = Join-Path $taskClasses 'ornithe-joined.srg'
     (Join-Path $taskMappings 'ornithe-intermediary.tiny') $taskOrnitheMapping
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao preparar os mappings Ornithe.' }
 $taskOneClientVersions = Join-Path $env:APPDATA 'Polyfrost\OneClient\metadata\versions'
-$taskOneClientGame = Get-ChildItem -LiteralPath $taskOneClientVersions -Recurse -Filter '1.8.9-*.jar' -File -ErrorAction SilentlyContinue |
-    Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if ($OneClientGame) {
+    $taskOneClientGame = Get-Item -LiteralPath $OneClientGame
+} else {
+    $taskOneClientGame = Get-ChildItem -LiteralPath $taskOneClientVersions -Recurse -Filter '1.8.9-*.jar' -File -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending | Select-Object -First 1
+}
 if ($taskOneClientGame) {
     & $taskJava -cp "$taskClasses;$taskAsmCp" RemapCrewToNotch `
         $taskNamedPayload $taskOrnithePayload $taskOrnitheMapping `
@@ -115,11 +120,7 @@ if ($taskOneClientGame) {
         (Join-Path $taskMappings 'notch-fields.csv') $taskOneClientGame.FullName `
         (Join-Path $taskMappings 'ornithe-intermediary.tiny')
 } else {
-    Write-Warning 'OneClient game jar ausente; o payload Ornithe sera gerado sem hierarquia de classes.'
-    & $taskJava -cp "$taskClasses;$taskAsmCp" RemapCrewToNotch `
-        $taskNamedPayload $taskOrnithePayload $taskOrnitheMapping `
-        (Join-Path $taskMappings 'notch-methods.csv') `
-        (Join-Path $taskMappings 'notch-fields.csv')
+    throw 'OneClient game jar ausente. Informe -OneClientGame para validar a hierarquia; payload sem hierarquia nao sera distribuido.'
 }
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao preparar o payload OneClient.' }
 

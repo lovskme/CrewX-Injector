@@ -99,6 +99,8 @@ public final class CrewXRuntimeHooks {
     private static boolean clickGuiFallbackLogged;
     private static boolean clickGuiFallbackErrorLogged;
     private static boolean frameOverlayFailureLogged;
+    private static boolean tickPreFailureLogged;
+    private static boolean tickPostFailureLogged;
     private static boolean itemRenderStateChecked;
     private static String lastTitleScreenClass;
 
@@ -227,6 +229,8 @@ public final class CrewXRuntimeHooks {
         initializationFailed = false;
         tickCounter = 0;
         firstTickSeen = false;
+        tickPreFailureLogged = false;
+        tickPostFailureLogged = false;
         firstFrameSeen = false;
         rshiftWasDown = false;
         rshiftDispatchedThisTick = false;
@@ -458,7 +462,11 @@ public final class CrewXRuntimeHooks {
                 diagnose();
             }
             EventManager.call(new TickEvent(EventType.PRE));
-        } catch (Throwable ignored) {
+        } catch (Throwable error) {
+            if (!tickPreFailureLogged) {
+                tickPreFailureLogged = true;
+                CrewXBootstrap.log("onTickPre FAILED: " + CrewXBootstrap.describeFailure(error));
+            }
 
         }
     }
@@ -528,7 +536,11 @@ public final class CrewXRuntimeHooks {
                         + " sentHook=" + firstClientPacketSent
                         + " sent2Hook=" + firstClientPacketSent2);
             }
-        } catch (Throwable ignored) {
+        } catch (Throwable error) {
+            if (!tickPostFailureLogged) {
+                tickPostFailureLogged = true;
+                CrewXBootstrap.log("onTickPost FAILED: " + CrewXBootstrap.describeFailure(error));
+            }
 
         }
     }
@@ -601,6 +613,13 @@ public final class CrewXRuntimeHooks {
             }
             if (!pressed) return;
             Minecraft mc = Minecraft.getMinecraft();
+            Module menu = CrewX.moduleManager == null ? null
+                    : CrewX.moduleManager.modules.get(crewx.module.modules.render.GuiModule.class);
+            if (menu != null && keyCode == menu.getKey()) {
+                CrewXBootstrap.log("ClickGui bind received: " + keyCode + "; screen="
+                        + (mc == null || mc.currentScreen == null ? "<none>"
+                                : mc.currentScreen.getClass().getName()));
+            }
             if (mc == null || mc.currentScreen != null) {
                 return;
             }

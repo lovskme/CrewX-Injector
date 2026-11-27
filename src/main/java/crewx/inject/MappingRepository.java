@@ -30,6 +30,13 @@ final class MappingRepository {
     }
 
     static InputStream openResource(String name) throws IOException {
+        // A payload and its runtime transformer must use the same mapping snapshot.
+        // Explicit document overrides still take precedence for development.
+        if (System.getProperty("crewx.mappings.document") == null
+                && !Boolean.getBoolean("crewx.mappings.remote")) {
+            InputStream bundled = MappingRepository.class.getResourceAsStream(name);
+            if (bundled != null) return bundled;
+        }
         JsonObject profiles = root().getAsJsonObject("profiles");
         if (profiles != null) {
             for (Map.Entry<String, JsonElement> profile : profiles.entrySet()) {
@@ -55,7 +62,9 @@ final class MappingRepository {
                 current = document;
                 if (current == null) {
                     current = loadConfiguredDocument();
-                    if (current == null) current = loadRemote();
+                    if (current == null && Boolean.getBoolean("crewx.mappings.remote")) {
+                        current = loadRemote();
+                    }
                     if (current == null) current = loadBundled();
                     if (current == null) {
                         current = new JsonObject();

@@ -1,31 +1,60 @@
-# CrewX Injector
+<div align="center">
 
-Source do [CrewX Injector](https://github.com/4everdies/CrewX-Injector) para Minecraft 1.8.9. Esta versão usa a base injetável CrewX 2.3 e incorpora alterações da source Java 2.4. Os detalhes do port e das adaptações para cada client estão em [BUILD-RECrew.md](BUILD-RECrew.md).
+![CrewX para OneClient](docs/assets/banner.svg)
 
-## Compilar no Windows
+**Uma adaptação independente do CrewX para o OneClient 1.8.9.**
 
-Requisitos: Windows x64, JDK 17, JDK 8, Visual Studio com ferramentas C++ e CMake. O Gradle Wrapper acompanha a source. Para incluir o payload do OneClient com a hierarquia de classes verificada, instale e execute o OneClient 1.8.9 antes do build; o script procura o JAR do jogo na instalação local. O payload do CheatBreaker é opcional e só é gerado quando o patch auditado está presente.
+![Minecraft 1.8.9](https://img.shields.io/badge/Minecraft-1.8.9-62c6a2?style=flat-square)
+![Windows x64](https://img.shields.io/badge/Windows-x64-70a8ff?style=flat-square)
+![Português brasileiro](https://img.shields.io/badge/Documentação-PT--BR-62c6a2?style=flat-square)
 
-Abra o PowerShell na raiz do projeto e execute, ajustando os caminhos dos JDKs:
+[Baixar versão de teste](https://github.com/sasazw2/CrewX-Injector/releases) · [Começar](#-como-usar) · [O que mudou](#-o-que-mudou) · [Compilar](docs/COMPILAR.md) · [Resolver problemas](docs/PROBLEMAS.md)
 
-```powershell
-.\Build-Injector.ps1 -Jdk17 'C:\caminho\jdk-17' -Jdk8 'C:\caminho\jdk-8'
-```
+</div>
 
-O loader compilado fica em `dist/CrewXInjector.exe`. Para compilar apenas o projeto Java:
+## ✨ Sobre o projeto
 
-```powershell
-.\gradlew.bat assemble
-```
+Esta adaptação do [CrewX Injector](https://github.com/4everdies/CrewX-Injector) é voltada ao ambiente Ornithe/Calamus Gen2 utilizado pelo OneClient 1.8.9. O repositório reúne o código do CrewX, as correções de compatibilidade, os testes e a compilação para Windows.
 
-Os arquivos gerados por esses comandos estão no `.gitignore` e não devem entrar no repositório. O arquivo `libs/mcef-legacy.jar` é uma dependência do build e permanece na source.
+É um projeto independente, sem vínculo oficial com a Polyfrost ou com os autores originais do CrewX.
 
-## Atualização de mappings
+## 🚀 Como usar
 
-Os mappings usados em runtime vêm do documento único `src/main/resources/crewx/inject/mappings.json`. O client consulta a versão raw desse arquivo na branch `main` do GitHub ao iniciar; se não houver conexão ou o documento remoto for inválido, usa a cópia empacotada no JAR. Assim, atualizações dos perfis podem ser publicadas no GitHub sem recompilar o client. O documento segue o formato `crewx-mappings/1`, com `profiles.notch.resources`, `profiles.ornithe.resources` e `profiles.cheatbreaker.resources`; o perfil CMPack, quando disponível, fica em `profiles.cmpack` usando o formato existente `crewx-cmpack-profile/1` (`format`, `host`, `classes`, `methods`, `fields` e, opcionalmente, `parents`).
+1. Abra [Releases](https://github.com/sasazw2/CrewX-Injector/releases) e procure a versão de teste mais recente.
+2. Em **Assets**, baixe `CrewXInjector.exe`. Para compilações mais novas ainda sem versão publicada, consulte a aba **Actions**.
+3. Feche completamente o OneClient e abra novamente, para remover uma injeção anterior da memória.
+4. Entre em um mundo e execute o `CrewXInjector.exe` baixado.
+5. Volte ao jogo e pressione **Insert**. Configurações antigas podem conservar uma tecla personalizada.
 
-O injector desta source veio sem um perfil CMPack, então ele ainda pode ser fornecido como `cmpack-mappings.json` local. Para servir o perfil CMPack pelo GitHub, adicione-o em `profiles.cmpack` no `mappings.json` e publique o arquivo na branch `main`. O client não faz polling: ele baixa a versão atual no início de cada execução.
+O executável é o injector do CrewX. O launcher e o jogo são instalados separadamente. Se o menu não abrir, consulte o [guia de diagnóstico](docs/PROBLEMAS.md).
 
-## Origem e licenças
+## 🔧 O que mudou
 
-O CrewX original é de [4everdies/CrewX](https://github.com/4everdies/CrewX). Os créditos e a licença da base estão preservados em [LICENSE](LICENSE); este repositório contém adaptações para o loader injetável. O MCEF incluído em `libs/mcef-legacy.jar` deriva do projeto [montoyo/mcef](https://github.com/montoyo/mcef). O JAR local não contém aviso de licença nem identifica a versão exata; confirme sua procedência e os termos de redistribuição antes de publicar releases que o incluam. Consulte também a [licença do projeto MCEF](https://github.com/montoyo/mcef/blob/master/LICENSE).
+| Área | Correção |
+| --- | --- |
+| Mappings | Recuperação de membros registrados apenas em interfaces ou superclasses. |
+| Herança | Uso da hierarquia do jogo durante o remapeamento do payload. |
+| Inicialização | Os mappings empacotados acompanham a versão compilada, sem substituição automática pelos do upstream. |
+| Eventos | Ordem dos eventos ajustada ao comportamento definido pelos mixins. |
+| Interface | Logs da tecla recebida, do pedido de abertura e da tela selecionada. |
+| Diagnóstico | Falhas de handlers e ticks são registradas no log da injeção. |
+
+## 🧪 Estado da validação
+
+A compilação de referência desta adaptação passou por **86 testes Java** e pela verificação estática de **4.122 referências ao Minecraft**, sem referências não resolvidas. Também houve uma comparação com uma classe `Minecraft` extraída do OneClient utilizado nos testes.
+
+Esses resultados verificam código e referências. A abertura do menu, a renderização e o comportamento dos módulos ainda precisam ser confirmados dentro do OneClient no Windows. Não há garantia de compatibilidade com todas as versões, todos os mods ou todos os servidores.
+
+## 🛠️ Compilar e contribuir
+
+Consulte [como compilar](docs/COMPILAR.md). A compilação automática verifica os mappings, executa os testes, compila o executável x64 e examina o payload antes de disponibilizar o arquivo.
+
+Ao relatar um problema, informe as versões do OneClient e do Java, a compilação utilizada e o trecho relevante dos logs. Remova tokens de acesso e dados pessoais antes de publicar.
+
+## 🤝 Créditos e licença
+
+- **CrewX original:** [4everdies/CrewX](https://github.com/4everdies/CrewX).
+- **Base do injector:** [4everdies/CrewX-Injector](https://github.com/4everdies/CrewX-Injector), revisão de referência `ffc30cc7ed9c7c881c397397bfbc2983bd49d3d4`.
+- **Adaptação para OneClient:** correções e documentação mantidas neste fork.
+
+A licença original **CC BY-NC 4.0** está preservada em [LICENSE](LICENSE). Dependências de terceiros mantêm suas próprias licenças. A documentação anterior e as notas de procedência do MCEF estão no [README original](docs/README-original.md) e em [BUILD-RECrew.md](BUILD-RECrew.md).

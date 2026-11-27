@@ -1650,11 +1650,13 @@ public final class CrewXRuntimeTransformer implements Opcodes {
                 if ("onLivingUpdate".equals(name) && "()V".equals(descriptor)) {
                     return new MethodVisitor(ASM9, redirectNoSlow(redirectPotionChecks(base))) {
                         private boolean moveInputDispatched;
-                        @Override public void visitCode() {
-                            super.visitCode();
-                            callHook(mv, "onLivingUpdate", "()V");
-                        }
                         @Override public void visitMethodInsn(int opcode, String owner, String calledName, String calledDescriptor, boolean isInterface) {
+                            // Match MixinEntityPlayerSP: after input has been updated,
+                            // immediately before the superclass living-update call.
+                            if (opcode == INVOKESPECIAL && "onLivingUpdate".equals(calledName)
+                                    && "()V".equals(calledDescriptor)) {
+                                callHook(mv, "onLivingUpdate", "()V");
+                            }
                             super.visitMethodInsn(opcode, owner, calledName, calledDescriptor, isInterface);
                             // OneClient retains the named owner but renames this method to m_... .
                             boolean movementOwner = "net/minecraft/util/MovementInput".equals(owner)
@@ -1662,7 +1664,9 @@ public final class CrewXRuntimeTransformer implements Opcodes {
                                     || (NotchMappings.isCheatBreaker()
                                         && CheatBreakerMappings.classInternalName("net/minecraft/util/MovementInput")
                                                 .equals(owner));
-                            if (!moveInputDispatched && movementOwner && "()V".equals(calledDescriptor)) {
+                            if (!moveInputDispatched
+                                    && (movementOwner || "updatePlayerMoveState".equals(calledName))
+                                    && "()V".equals(calledDescriptor)) {
                                 callHook(mv, "onMoveInput", "()V");
                                 moveInputDispatched = true;
                                 CrewXBootstrap.log("transform: movement input hook after " + owner + "." + calledName);

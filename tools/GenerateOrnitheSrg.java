@@ -4,6 +4,8 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 /** Composes MCP's official mappings with Ornithe Calamus intermediary gen2. */
 public final class GenerateOrnitheSrg {
@@ -46,9 +48,28 @@ public final class GenerateOrnitheSrg {
                 || !"m_20213497".equals(methods.get("ave/A ()Lave;"))) {
             throw new IllegalArgumentException("Ornithe 1.8.9 sentinels changed");
         }
+        List<String> joined = Files.readAllLines(Paths.get(args[0]), StandardCharsets.UTF_8);
+        // Calamus stores an override on its interface/base class, while MCP repeats
+        // that SRG member on implementations. Recover only unambiguous SRG aliases;
+        // matching bare obfuscated names (a/b/...) would mix unrelated methods.
+        Map<String, String> methodAliases = new HashMap<>();
+        Map<String, String> fieldAliases = new HashMap<>();
+        Set<String> ambiguousMethods = new HashSet<>();
+        Set<String> ambiguousFields = new HashSet<>();
+        for (String line : joined) {
+            String[] p = line.trim().split(" +");
+            if (p.length == 5 && "MD:".equals(p[0])) {
+                String mapped = methods.get(p[1] + ' ' + p[2]);
+                if (mapped != null) alias(methodAliases, ambiguousMethods,
+                        simple(p[3]) + ' ' + p[4], mapped);
+            } else if (p.length == 3 && "FD:".equals(p[0])) {
+                String mapped = fields.get(p[1]);
+                if (mapped != null) alias(fieldAliases, ambiguousFields, simple(p[2]), mapped);
+            }
+        }
         StringBuilder out = new StringBuilder();
         int classCount = 0, fieldCount = 0, methodCount = 0, missing = 0;
-        for (String line : Files.readAllLines(Paths.get(args[0]), StandardCharsets.UTF_8)) {
+        for (String line : joined) {
             String[] p = line.trim().split(" +");
             if (p.length == 3 && "CL:".equals(p[0])) {
                 String mapped = classes.get(p[1]);
@@ -62,6 +83,7 @@ public final class GenerateOrnitheSrg {
                 String owner = official.substring(0, slash);
                 String mappedOwner = classes.get(owner);
                 String mappedField = fields.get(official);
+                if (mappedField == null) mappedField = fieldAliases.get(simple(p[2]));
                 if (mappedOwner == null || mappedField == null) { missing++; continue; }
                 out.append("FD: ").append(mappedOwner).append('/').append(mappedField)
                         .append(' ').append(p[2]).append('\n');
@@ -73,6 +95,9 @@ public final class GenerateOrnitheSrg {
                 String owner = official.substring(0, slash);
                 String mappedOwner = classes.get(owner);
                 String mappedMethod = methods.get(official + ' ' + p[2]);
+                if (mappedMethod == null) {
+                    mappedMethod = methodAliases.get(simple(p[3]) + ' ' + p[4]);
+                }
                 // Calamus records IThreadListener's inherited method on the interface only.
                 if (mappedMethod == null && "ave/a".equals(official)
                         && "(Ljava/lang/Runnable;)Lcom/google/common/util/concurrent/ListenableFuture;".equals(p[2])) {
@@ -94,5 +119,19 @@ public final class GenerateOrnitheSrg {
         Files.write(Paths.get(args[2]), out.toString().getBytes(StandardCharsets.UTF_8));
         System.out.println("Ornithe mapping: " + classCount + " classes, " + fieldCount
                 + " fields, " + methodCount + " methods, " + missing + " missing");
+    }
+
+    private static String simple(String name) {
+        return name.substring(name.lastIndexOf('/') + 1);
+    }
+
+    private static void alias(Map<String, String> values, Set<String> ambiguous,
+            String key, String value) {
+        if (ambiguous.contains(key)) return;
+        String previous = values.putIfAbsent(key, value);
+        if (previous != null && !previous.equals(value)) {
+            values.remove(key);
+            ambiguous.add(key);
+        }
     }
 }

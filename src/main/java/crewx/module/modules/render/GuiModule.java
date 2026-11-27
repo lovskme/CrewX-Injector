@@ -58,6 +58,7 @@ public class GuiModule extends Module {
     public void onEnabled() {
         setEnabled(false);
         this.openNextTick = true;
+        crewx.inject.CrewXBootstrap.log("ClickGui opening queued; bind=" + getKey());
     }
 
     @EventTarget
@@ -69,11 +70,17 @@ public class GuiModule extends Module {
     }
 
     private void openGui() {
+        crewx.inject.CrewXBootstrap.log("ClickGui opening; style="
+                + (isModern() ? "Modern" : "Legacy"));
         if (isModern()) {
             try {
                 CrewXClickGuiBridge.open();
+                crewx.inject.CrewXBootstrap.log("ClickGui screen after open: "
+                        + (mc.currentScreen == null ? "<none>" : mc.currentScreen.getClass().getName()));
                 return;
             } catch (Throwable t) {
+                crewx.inject.CrewXBootstrap.log("Modern ClickGui FAILED: "
+                        + crewx.inject.CrewXBootstrap.describeFailure(t));
                 t.printStackTrace();
             }
         }
@@ -83,6 +90,8 @@ public class GuiModule extends Module {
             }
             mc.displayGuiScreen(this.legacyGui);
         } catch (Throwable t) {
+            crewx.inject.CrewXBootstrap.log("Legacy ClickGui FAILED: "
+                    + crewx.inject.CrewXBootstrap.describeFailure(t));
             t.printStackTrace();
         }
     }

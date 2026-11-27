@@ -14,3 +14,7 @@ build/
 *.pfx
 *.pem
 *.key
+
+# Cache das ferramentas Python
+__pycache__/
+*.pyc

@@ -310,6 +310,11 @@ public final class RemapCrewToNotch {
                     try (InputStream stream = input.getInputStream(entry)) {
                         data = readAll(stream);
                     }
+                    if (entry.getName().equals("crewx/inject/ornithe-joined.srg")
+                            && "net/minecraft/client/Minecraft".equals(
+                                    mapping.classes.get("net/minecraft/client/Minecraft"))) {
+                        data = Files.readAllBytes(Paths.get(args[2]));
+                    }
                     if ((entry.getName().startsWith("crewx/")
                             || entry.getName().startsWith("net/montoyo/mcef/")
                             || (args.length > 5 && entry.getName().equals("org/cef/browser/CefRenderer.class")))

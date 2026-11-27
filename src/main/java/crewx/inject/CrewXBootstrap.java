@@ -91,7 +91,6 @@ public final class CrewXBootstrap {
             "net.minecraft.block.BlockPane",
             "net.minecraft.block.BlockWeb",
             "net.minecraft.client.renderer.BlockRendererDispatcher",
-            "crewx.module.modules.misc.BedNuker",
     };
 
     private CrewXBootstrap() {
@@ -526,7 +525,7 @@ public final class CrewXBootstrap {
         }
     }
 
-    static String describeFailure(Throwable error) {
+    public static String describeFailure(Throwable error) {
         StringBuilder detail = new StringBuilder();
         int depth = 0;
         for (Throwable current = error; current != null && depth < 4;
