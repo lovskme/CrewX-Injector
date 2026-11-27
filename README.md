@@ -10,7 +10,7 @@ Windows x64 · Minecraft 1.8.9 · OneClient
 
 1. Baixe o `CrewXInjector.exe` pelo link acima.
 2. Abra o OneClient, inicie a versão **1.8.9** e entre em um mundo ou servidor de Minecraft.
-3. Execute o `CrewXInjector.exe`.
+3. Execute o `CrewXInjector.exe` e, na janela que abrir, clique em **OneClient - Minecraft 1.8.9** na lista para injetar o CrewX.
 4. Volte ao jogo e pressione **Insert**.
 
 Uma configuração antiga pode conservar outra tecla. O launcher e o jogo são instalados separadamente.
